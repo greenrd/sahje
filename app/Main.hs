@@ -1,6 +1,7 @@
+{-# LANGUAGE NamedFieldPuns #-}
 module Main where
 
-import Args
+import qualified Args
 import UI
 
 import ClassyPrelude hiding ((<>))
@@ -20,15 +21,20 @@ parseJsonFile =
 
 main :: IO ()
 main = do
-  args <- execParser . info (helper <*> argParser) $
+  args <- execParser . info (helper <*> Args.argParser) $
     fullDesc <> progDesc "Edit FILE.json in a structured way" <>
     header "sahje - Schema Aware Haskell JSON Editor"
-  json <- parseJsonFile $ fileToEdit args
-  theSchema <- parseJsonFile $ schema args
-  let schemaWithURI = SchemaWithURI theSchema . return . pack $ "file:///" ++ schema args
+  json <- parseJsonFile $ Args.fileToEdit args
+  theSchema <- parseJsonFile $ Args.schema args
+  let schemaWithURI = SchemaWithURI theSchema . return . pack $ "file:///" ++ Args.schema args
   validationResult <- fetchHTTPAndValidate schemaWithURI json
   case validationResult of
     Left (HVRequest failure) -> fail $ "HTTP request failed: " ++ show failure
-    Left (HVSchema si) -> fail $ schema args ++ " is not a valid draft4 JSON Schema: " ++ show si
-    Left (HVData iv) -> fail $ fileToEdit args ++ " failed JSON schema validation: " ++ show iv
-    Right () -> brickMain schemaWithURI (fileToEdit args) json
+    Left (HVSchema si) -> fail $ Args.schema args ++ " is not a valid draft4 JSON Schema: " ++ show si
+    Left (HVData iv) -> fail $ Args.fileToEdit args ++ " failed JSON schema validation: " ++ show iv
+    Right () ->
+      let initialState = SahjeState { schema = schemaWithURI
+                                    , filename = Args.fileToEdit args
+                                    , json
+                                    }
+      in brickMain initialState
