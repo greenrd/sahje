@@ -1,38 +1,35 @@
 {-# LANGUAGE GADTs #-}
 module UI where
 
-import Brick.AttrMap (attrMap)
-import Brick.Main (App(..), defaultMain, halt)
-import Brick.Types (Widget)
-import Brick.Widgets.Core (str)
+import Brick.Main (App(..), continue, defaultMain, halt, showFirstCursor)
+import Brick.Types (BrickEvent(VtyEvent), Widget)
+import Brick.Widgets.Core (str, withAttr)
 import Brick.Widgets.List
 import ClassyPrelude
-import Data.Aeson.Types (Value(Object))
-import Data.JsonSchema.Draft4 (Schema, SchemaWithURI)
-import Graphics.Vty.Attributes (defAttr)
+import Graphics.Vty.Input.Events (Event(EvKey), Key(KChar))
 
-data SahjeState = SahjeState { schema   :: SchemaWithURI Schema
-                             , filename :: FilePath
-                             , json     :: Value
-                             }
-
-toModel :: (Eq a, Ord a, Hashable a) => HashMap a Value -> List () a
-toModel obj = list () (fromList $ sort fieldNames) 1
-  where
-    fieldNames = keys obj
+import Attributes
+import Model
 
 ui :: SahjeState -> [Widget ()]
-ui (SahjeState { json = Object obj }) = [renderList fieldUI True $ toModel obj]
+ui (SahjeState { model = Obj fields }) = [renderList fieldUI True fields]
   where
-    fieldUI selected fieldName = str $ unpack fieldName
+    fieldUI False fieldName = str $ unpack fieldName
+    fieldUI True  fieldName = withAttr selected $ fieldUI False fieldName
 ui ss = [str "TODO"]
+
+handleEvent ss (VtyEvent (EvKey (KChar 'q') [])) = halt ss
+handleEvent ss@(SahjeState { model = Obj fields }) (VtyEvent event) = do
+  newFields <- handleListEvent event fields
+  continue ss { model = Obj newFields }
+handleEvent ss _ = continue ss
 
 app :: App SahjeState () ()
 app = App { appDraw = ui
-          , appChooseCursor = \_ _ -> Nothing
-          , appHandleEvent = \s _ -> halt s
+          , appChooseCursor = showFirstCursor
+          , appHandleEvent = handleEvent
           , appStartEvent = return
-          , appAttrMap = \_ -> attrMap defAttr []
+          , appAttrMap = \_ -> sahjeAttrMap
           }
 
 brickMain :: SahjeState -> IO ()

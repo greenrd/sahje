@@ -1,7 +1,7 @@
-{-# LANGUAGE NamedFieldPuns #-}
 module Main where
 
 import qualified Args
+import Model
 import UI
 
 import ClassyPrelude hiding ((<>))
@@ -35,6 +35,6 @@ main = do
     Right () ->
       let initialState = SahjeState { schema = schemaWithURI
                                     , filename = Args.fileToEdit args
-                                    , json
+                                    , model = toModel json
                                     }
       in brickMain initialState
