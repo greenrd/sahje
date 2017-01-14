@@ -1,4 +1,3 @@
-{-# LANGUAGE NoImplicitPrelude #-}
 module Args (argParser, SahjeArgs(..)) where
 
 import Options.Applicative ((<>), argument, help, long, metavar, Parser, short, str, strOption)

@@ -1,11 +1,11 @@
-{-# LANGUAGE NoImplicitPrelude, OverloadedStrings #-}
 module Main where
 
 import Args
+import UI
 
 import ClassyPrelude hiding ((<>))
 import Data.Aeson (eitherDecode, FromJSON)
-import Data.JsonSchema.Draft4 (fetchHTTPAndValidate
+import Data.JsonSchema.Draft4 ( fetchHTTPAndValidate
                               , HTTPValidationFailure(..)
                               , SchemaWithURI(..)
                               )
@@ -31,4 +31,4 @@ main = do
     Left (HVRequest failure) -> fail $ "HTTP request failed: " ++ show failure
     Left (HVSchema si) -> fail $ schema args ++ " is not a valid draft4 JSON Schema: " ++ show si
     Left (HVData iv) -> fail $ fileToEdit args ++ " failed JSON schema validation: " ++ show iv
-    Right () -> putStrLn "JSON parsed and validated successfully!"
+    Right () -> brickMain schemaWithURI (fileToEdit args) json
