@@ -3,7 +3,7 @@ module UI where
 
 import Brick.Main (App(..), continue, defaultMain, halt, showFirstCursor)
 import Brick.Types (BrickEvent(VtyEvent), Widget)
-import Brick.Widgets.Core ((<+>), hLimit, str, withAttr)
+import Brick.Widgets.Core ((<+>), hLimit, str, textWidth, withAttr)
 import Brick.Widgets.List (handleListEvent, listElementsL, listSelectedL, renderList)
 import ClassyPrelude hiding (maximum, toList)
 import Data.Foldable (maximum, toList)
@@ -23,7 +23,7 @@ render hasFocus (Obj fields)
     listUI
       = hLimit . (2 +) . maxWidth . toList <*> renderList fieldUI hasFocus $ fst <$> fields
     maxWidth :: [Text] -> Int
-    maxWidth = maybe 0 (maximum . map length) . nonEmpty
+    maxWidth = maybe 0 (maximum . map textWidth) . nonEmpty
     fieldUI fieldSelected fieldName = str $ unpack fieldName
     selectedField :: Maybe (Text, Model)
     selectedField = do
