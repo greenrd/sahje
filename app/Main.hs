@@ -14,7 +14,7 @@ import Options.Applicative
 
 parseJsonFile :: FromJSON a => FilePath -> IO a
 parseJsonFile =
-  (=<<) . flip either return . bail <*> fmap eitherDecode . readFile
+  (=<<) . flip either pure . bail <*> fmap eitherDecode . readFile
   where
     bail :: FilePath -> String -> IO a
     bail fp = fail . ((fp ++ " does not contain well-formed JSON: ") ++)
@@ -26,7 +26,7 @@ main = do
     header "sahje - Schema Aware Haskell JSON Editor"
   json <- parseJsonFile $ Args.fileToEdit args
   theSchema <- parseJsonFile $ Args.schema args
-  let schemaWithURI = SchemaWithURI theSchema . return . pack $ "file:///" ++ Args.schema args
+  let schemaWithURI = SchemaWithURI theSchema . pure . pack $ "file:///" ++ Args.schema args
   validationResult <- fetchHTTPAndValidate schemaWithURI json
   case validationResult of
     Left (HVRequest failure) -> fail $ "HTTP request failed: " ++ show failure
