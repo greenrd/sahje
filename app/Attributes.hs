@@ -1,10 +1,9 @@
-module Attributes where
+module Attributes (sahjeAttrMap) where
 
-import Brick.AttrMap (attrMap, AttrName)
+import Brick.AttrMap (attrMap)
 import Brick.Widgets.List (listSelectedFocusedAttr)
-import ClassyPrelude
-import Graphics.Vty.Attributes (black, defAttr, white, withBackColor, withForeColor)
+import Brick.Util (on)
+import ClassyPrelude hiding (on)
+import Graphics.Vty.Attributes (black, defAttr, white)
 
-inverted = defAttr `withForeColor` black `withBackColor` white
-
-sahjeAttrMap = attrMap defAttr [(listSelectedFocusedAttr, inverted)]
+sahjeAttrMap = attrMap defAttr [(listSelectedFocusedAttr, black `on` white)]
