@@ -35,6 +35,6 @@ main = do
     Right () ->
       let initialState = SahjeState { schema = schemaWithURI
                                     , filename = Args.fileToEdit args
-                                    , model = toModel json
+                                    , model = toModel [] json
                                     }
       in brickMain initialState
