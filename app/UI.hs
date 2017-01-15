@@ -3,10 +3,12 @@ module UI where
 
 import Brick.Main (App(..), continue, defaultMain, halt, showFirstCursor)
 import Brick.Types (BrickEvent(VtyEvent), Widget)
-import Brick.Widgets.Core ((<+>), str, withAttr)
+import Brick.Widgets.Core ((<+>), hLimit, str, withAttr)
 import Brick.Widgets.List (handleListEvent, listElementsL, listSelectedL, renderList)
-import ClassyPrelude
+import ClassyPrelude hiding (maximum, toList)
+import Data.Foldable (maximum, toList)
 import Data.Maybe (fromJust)
+import Data.List.NonEmpty (nonEmpty)
 import Graphics.Vty.Input.Events (Event(EvKey), Key(KChar))
 import Lens.Micro ((^.), (^?))
 import Lens.Micro.Platform (ix)
@@ -18,7 +20,10 @@ render :: Bool -> Model -> Widget Path
 render hasFocus (Obj fields)
   = maybe listUI ((listUI <+>) . render False . snd) selectedField
   where
-    listUI = renderList fieldUI hasFocus $ fst <$> fields
+    listUI
+      = hLimit . (2 +) . maxWidth . toList <*> renderList fieldUI hasFocus $ fst <$> fields
+    maxWidth :: [Text] -> Int
+    maxWidth = maybe 0 (maximum . map length) . nonEmpty
     fieldUI fieldSelected fieldName = str $ unpack fieldName
     selectedField :: Maybe (Text, Model)
     selectedField = do
