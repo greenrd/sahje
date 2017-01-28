@@ -45,7 +45,8 @@ deleteSelected :: Schema -> List n (Text, Model) -> Maybe (List n (Text, Model))
 deleteSelected schema fields = do
   selectedIndex <- fields ^. listSelectedL
   selField <- selectedField fields
-  guard $ maybe True (not . ((fst selField) `member`)) $ _schemaRequired schema
+  guard . maybe True (not . ((fst selField) `member`)) $ _schemaRequired schema
+  guard . maybe True (length fields /=) $ _schemaMinProperties schema
   pure . (jumpBackIfPossible <*> (`listRemove` fields)) $ selectedIndex 
   where
     jumpBackIfPossible selectedIndex fields =
