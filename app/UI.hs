@@ -7,7 +7,9 @@ import Brick.Widgets.Core ((<+>), hLimit, str, textWidth, withAttr)
 import Brick.Widgets.List
 import ClassyPrelude
 import qualified Data.Foldable as Foldable
+import qualified Data.HashMap.Lazy as HashMap
 import Data.JsonSchema.Draft4 (SchemaWithURI(..), Schema(..))
+import Data.Validator.Draft4.Object (Dependency(..))
 import Data.NonNull (fromNullable)
 import Graphics.Vty.Input.Events (Event(EvKey), Key(KChar, KDel))
 import Lens.Micro ((^.), (^?), (.~), to)
@@ -41,13 +43,28 @@ render _ _ = str "TODO"
 ui :: SahjeState -> [Widget Path]
 ui = pure . render True . model
 
+checkDep :: List n (Text, Model) -> Text -> (Text, Dependency Schema) -> Bool
+checkDep newFields _ (dependentField, _)
+  | not $ dependentField `elem` (fst <$> newFields) = True
+checkDep newFields deletedField (dependentField, PropertyDependency requiredFields)
+  = not $ deletedField `elem` requiredFields
+checkDep newFields deletedField (dependentField, SchemaDependency schema)
+  = checkDeletion schema newFields deletedField
+
+checkDeletion :: Schema -> List n (Text, Model) -> Text -> Bool
+checkDeletion schema newFields deletedField =
+  and $ catMaybes [ not . (deletedField `member`) <$> _schemaRequired schema
+      , (length newFields >=) <$> _schemaMinProperties schema
+      , all (checkDep newFields deletedField) . HashMap.toList <$> _schemaDependencies schema
+      ]
+
 deleteSelected :: Schema -> List n (Text, Model) -> Maybe (List n (Text, Model))
 deleteSelected schema fields = do
   selectedIndex <- fields ^. listSelectedL
-  selField <- selectedField fields
-  guard . maybe True (not . ((fst selField) `member`)) $ _schemaRequired schema
-  guard . maybe True (length fields /=) $ _schemaMinProperties schema
-  pure . (jumpBackIfPossible <*> (`listRemove` fields)) $ selectedIndex 
+  selField <- fst <$> selectedField fields
+  let newFields = listRemove selectedIndex fields
+  guard $ checkDeletion schema newFields selField
+  pure $ jumpBackIfPossible selectedIndex newFields
   where
     jumpBackIfPossible selectedIndex fields =
       (if selectedIndex < length fields
