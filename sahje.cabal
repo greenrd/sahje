@@ -23,14 +23,14 @@ executable sahje
   main-is:             Main.hs
   build-depends:       aeson >= 0.11.2.1 && < 0.12
                      , base
-                     , brick >= 0.16
+                     , brick >= 0.17
                      , classy-prelude >= 1.0.2 && < 1.1
                      , hjsonschema >= 1.3.0.0 && < 1.4
                      , microlens
                      , microlens-platform
                      , mono-traversable >= 1.0.1 && < 1.1
                      , optparse-applicative >= 0.12.1.0 && < 0.13
-                     , vty >= 5.14 && < 5.15
+                     , vty >= 5.15 && < 5.16
   default-language:    Haskell2010
   default-extensions:  NoImplicitPrelude
                      , OverloadedStrings
